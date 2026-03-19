@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="hr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KOB-KERAMIKA V9.9 SECURE ✅</title>
+
+  <!-- Inter font -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- App styles -->
+  <link rel="stylesheet" href="style.css" />
+
+  <!--
+    TODO: Add Firebase SDK scripts when you have your Firebase config.
+    Replace the placeholder config values in main.js before enabling these.
+
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  -->
+</head>
+<body>
+
+  <!-- ═══════════════════════════════════════════════════════
+       LOGIN OVERLAY
+       ═══════════════════════════════════════════════════════ -->
+  <div id="login-overlay" class="overlay">
+    <div class="modal-window">
+
+      <!-- Close (reload) -->
+      <button class="close-overlay-btn" onclick="window.location.reload()" title="Zatvori">&times;</button>
+
+      <!-- Logo -->
+      <div class="auth-logo">
+        <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+          <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+          <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+        </svg>
+        <span style="font-size:1.5rem;font-weight:700;">KOB-KERAMIKA</span>
+      </div>
+
+      <h2>Prijava u sustav</h2>
+
+      <div class="auth-fields">
+
+        <!-- Email -->
+        <div class="input-group">
+          <label for="auth-email">Email adresa</label>
+          <input type="email" id="auth-email" placeholder="vas@email.com" autocomplete="username" />
+        </div>
+
+        <!-- Password -->
+        <div class="input-group">
+          <label for="auth-password">Lozinka</label>
+          <div class="password-wrapper">
+            <input type="password" id="auth-password" placeholder="••••••" autocomplete="current-password" />
+            <button type="button" class="password-toggle-btn"
+                    onclick="window.togglePasswordVisibility()" title="Prikaži/sakrij lozinku">
+              👁️
+            </button>
+          </div>
+        </div>
+
+        <!-- Action buttons -->
+        <div class="auth-actions">
+          <button class="btn btn-primary" id="btn-login-submit"
+                  onclick="window.handleAuth('login')"
+                  style="width:100%;justify-content:center;font-size:1rem;padding:14px;">
+            Prijavi se
+          </button>
+          <button class="btn" onclick="window.handleAuth('register')"
+                  style="width:100%;justify-content:center;font-size:0.8rem;
+                         background:transparent;border:1px solid var(--primary);
+                         color:var(--primary);padding:10px;">
+            Registriraj novi račun
+          </button>
+        </div>
+
+        <!-- Messages -->
+        <p id="auth-error"   style="display:none;"></p>
+        <p id="auth-success" style="display:none;"></p>
+
+      </div><!-- /.auth-fields -->
+    </div><!-- /.modal-window -->
+  </div><!-- /#login-overlay -->
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       PENDING APPROVAL OVERLAY
+       ═══════════════════════════════════════════════════════ -->
+  <div id="pending-approval-overlay" class="overlay" style="display:none;">
+    <div class="modal-window" style="max-width:450px;padding:40px;text-align:center;border:2px solid var(--warning);">
+      <div class="pending-icon">🔒</div>
+      <h2 id="pending-title">Čekanje Odobrenja!</h2>
+      <p id="pending-message">
+        Vaš račun je kreiran, ali <strong>Glavni Administrator</strong> mora odobriti
+        Vaš pristup aplikaciji.<br><br>
+        Sva Vaša mjerila i podaci bit će izolirani i potpuno vezani samo uz ovaj račun.
+      </p>
+      <button class="btn" onclick="window.doLogout()"
+              style="background:transparent;border:1px solid var(--text-muted);
+                     color:var(--text-muted);border-radius:8px;padding:10px 20px;">
+        Odjavi se
+      </button>
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════
+       APP LAYOUT
+       ═══════════════════════════════════════════════════════ -->
+  <div class="app-layout">
+
+    <!-- ─────────────────── SIDEBAR ─────────────────────── -->
+    <nav class="sidebar">
+
+      <!-- Logo / version -->
+      <div class="logo">
+        <span style="font-size:0.6rem;color:var(--success);display:block;width:100%;text-align:center;">
+          V9.9 SECURE ✅
+        </span>
+        <p id="main-debug-status"
+           style="font-size:0.6rem;color:var(--text-muted);text-align:center;margin:2px 0;"></p>
+
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+             fill="none" stroke="currentColor" stroke-width="2"
+             stroke-linecap="round" stroke-linejoin="round">
+          <path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/>
+          <path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/>
+          <path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/>
+          <path d="M10 6h4"/><path d="M10 10h4"/>
+          <path d="M10 14h4"/><path d="M10 18h4"/>
+        </svg>
+        <span>KOB-KERAMIKA</span>
+      </div>
+
+      <!-- Radni dio -->
+      <div class="sidebar-section-label">RADNI DIO</div>
+      <ul class="nav-links">
+        <li><button class="nav-btn active" data-target="view-troskovnik">1. Troškovnik</button></li>
+        <li><button class="nav-btn"        data-target="view-gk">2. Unos Mjera (Knjiga)</button></li>
+        <li><button class="nav-btn"        data-target="view-gk-pregled">3. Pregled (Građ. Knjiga)</button></li>
+        <li><button class="nav-btn"        data-target="view-situacija">4. Troškovnik Situacije</button></li>
+      </ul>
+
+      <!-- Projekti i izvoz -->
+      <div class="sidebar-section-label">PROJEKTI I IZVOZ</div>
+
+      <!-- Project selector -->
+      <div class="project-box">
+        <div class="project-box-label">
+          Odabrani Projekt
+          <button class="icon-btn" onclick="window.addNewProject()" title="Novi Projekt">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                 viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14"/><path d="M12 5v14"/>
+            </svg>
+          </button>
+        </div>
+        <div class="project-select-row">
+          <select id="project-selector" onchange="window.switchProject(this.value)">
+            <!-- Filled by JS -->
+          </select>
+        </div>
+        <div class="project-actions">
+          <button onclick="window.renameCurrentProject()">Preimenuj</button>
+          <button class="danger" onclick="window.deleteCurrentProject()">Obriši</button>
+        </div>
+      </div>
+
+      <!-- Situacija selector -->
+      <div class="situation-box">
+        <label class="situation-box-label">Aktivni Obračun</label>
+        <div class="situation-row">
+          <input type="number" id="global-sit-num" value="1" min="1" step="1"
+                 onchange="window.changeGlobalSituacija()" />
+          <select id="global-sit-vrsta" onchange="window.changeGlobalSituacija()">
+            <option value="privremena">Privremena</option>
+            <option value="okoncana">Okončana</option>
+          </select>
+        </div>
+        <button class="btn btn-secondary" onclick="window.openPonudaModal()"
+                style="width:100%;border-color:var(--success);color:var(--success);
+                       font-size:0.75rem;padding:8px;justify-content:center;">
+          📄 Generiraj Ponudu / Obračun
+        </button>
+      </div>
+
+      <!-- Sustav i postavke -->
+      <div class="sidebar-section-label">SUSTAV I POSTAVKE</div>
+
+      <details class="">
+        <summary>⚙️ Sigurnosni Oblak / Instalacija</summary>
+        <div class="details-content">
+          <div class="cloud-status" onclick="window.openCloudModal()">
+            <div class="cloud-status-row">
+              <span id="cloud-indicator-icon">☁️</span>
+              <span id="cloud-indicator-text">Oblak (Offline)</span>
+            </div>
+            <div class="cloud-status-hint">Klikni za postavljanje oblaka</div>
+          </div>
+          <button id="btn-cloud-pull" onclick="window.pullFromCloud()"
+                  style="display:none;width:100%;padding:10px;background:var(--primary);
+                         color:#fff;border:none;border-radius:8px;font-weight:700;
+                         cursor:pointer;font-size:0.85rem;margin-bottom:10px;">
+            ⬇️ Preuzmi s oblaka
+          </button>
+          <button id="btn-install-pwa" onclick="window.installPWA()"
+                  style="display:block;width:100%;padding:10px;background:var(--success);
+                         color:#fff;border:none;border-radius:8px;font-weight:700;
+                         cursor:pointer;font-size:0.85rem;">
+            📱 Instaliraj App
+          </button>
+        </div>
+      </details>
+
+      <details>
+        <summary>🎨 Izgled aplikacije (Tema)</summary>
+        <div class="details-content" style="display:flex;flex-direction:column;gap:8px;">
+          <button onclick="window.setAppTheme('dark')"
+                  style="width:100%;padding:8px;border-radius:6px;border:1px solid #334155;
+                         background:#0f172a;color:#fff;font-size:0.75rem;cursor:pointer;">
+            Tamna (Zadano)
+          </button>
+          <button onclick="window.setAppTheme('light')"
+                  style="width:100%;padding:8px;border-radius:6px;border:1px solid #cbd5e1;
+                         background:#f8fafc;color:#1e293b;font-size:0.75rem;cursor:pointer;">
+            Svijetla
+          </button>
+          <button onclick="window.setAppTheme('premium')"
+                  style="width:100%;padding:8px;border-radius:6px;border:1px solid #7c3aed;
+                         background:linear-gradient(135deg,#1e1b4b 0%,#312e81 100%);
+                         color:#e9d5ff;font-size:0.75rem;cursor:pointer;">
+            Premium
+          </button>
+        </div>
+      </details>
+
+      <!-- Active user -->
+      <div id="active-user-display" style="display:none;">
+        Prijavljen: <strong id="current-user-email" style="color:var(--primary);"></strong>
+      </div>
+
+      <!-- Admin panel (shown only for admin role) -->
+      <li id="admin-panel-li" style="display:none;list-style-type:none;margin:0 20px 10px 20px;">
+        <button type="button" onclick="window.openAdminPanelModal()"
+                style="width:100%;padding:10px;background:rgba(234,179,8,0.1);
+                       border:1px solid var(--warning);color:var(--warning);
+                       border-radius:8px;font-weight:700;cursor:pointer;font-size:0.85rem;
+                       display:flex;align-items:center;justify-content:center;gap:8px;">
+          👑 Upravljanje Korisnicima
+        </button>
+      </li>
+
+      <!-- Logout -->
+      <button onclick="window.doLogout()"
+              style="margin:0 20px 20px 20px;padding:10px;
+                     background:rgba(239,68,68,0.1);border:1px solid var(--danger);
+                     color:var(--danger);border-radius:8px;font-weight:700;
+                     cursor:pointer;font-size:0.85rem;
+                     display:flex;align-items:center;justify-content:center;gap:8px;">
+        🚪 Odjavi se
+      </button>
+
+    </nav><!-- /.sidebar -->
+
+
+    <!-- ─────────────────── MAIN CONTENT ─────────────────── -->
+    <main class="main-content">
+
+      <!-- ═══ VIEW: TROŠKOVNIK ═══════════════════════════════ -->
+      <section id="view-troskovnik" class="view active">
+
+        <header class="view-header">
+          <div>
+            <h2>Troškovnik</h2>
+            <p>Unos stavki i pozicija, formiranje osnovnih cijena.</p>
+          </div>
+          <div class="actions">
+            <input type="file" id="excel-upload" accept=".xlsx,.xls,.csv" style="display:none;" />
+            <button class="btn btn-secondary"
+                    onclick="document.getElementById('excel-upload').click()">
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16"
+                   viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                   stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              Učitaj iz Excela
+            </button>
+          </div>
+        </header>
+
+        <!-- Add item form -->
+        <div class="card add-item-form">
+          <h3>Dodaj novu stavku troškovnika</h3>
+          <div class="form-grid">
+            <div class="input-group">
+              <label for="t-pos">Pozicija</label>
+              <input type="text" id="t-pos" placeholder="1.1" />
+            </div>
+            <div class="input-group">
+              <label for="t-desc">Opis stavke</label>
+              <input type="text" id="t-desc" placeholder="Npr. Postavljanje keramike..." />
+            </div>
+            <div class="input-group">
+              <label for="t-unit">J.Mjera</label>
+              <input type="text" id="t-unit" placeholder="m²" />
+            </div>
+            <div class="input-group">
+              <label for="t-price">Cijena (€)</label>
+              <input type="number" id="t-price" placeholder="0.00" min="0" step="0.01" />
+            </div>
+            <div class="input-group">
+              <label for="t-qty">Količina (Fix)</label>
+              <input type="number" id="t-qty" placeholder="Ručno" min="0" step="0.01" />
+            </div>
+            <button class="btn btn-primary" id="btn-add-troskovnik"
+                    style="height:48px;white-space:nowrap;">
+              Dodaj Stavku
+            </button>
+          </div>
+        </div>
+
+        <!-- Table -->
+        <div class="card" id="troskovnik-card">
+          <button class="max-btn" onclick="window.toggleCardMaximize(this)">
+            🔍 Povećaj prozor
+          </button>
+          <div class="table-container">
+            <table class="data-table" id="troskovnik-table">
+              <thead>
+                <tr>
+                  <th style="width:50px;">Poz.</th>
+                  <th>Opis stavke</th>
+                  <th style="width:200px;text-align:right;">Količina / Cijena / Ukupno</th>
+                </tr>
+              </thead>
+              <!-- tbody filled by JS -->
+            </table>
+          </div>
+        </div>
+
+      </section><!-- /#view-troskovnik -->
+
+
+      <!-- ═══ VIEW: UNOS MJERA (GRAĐEVINSKA KNJIGA) ══════════ -->
+      <section id="view-gk" class="view">
+
+        <header class="view-header">
+          <div>
+            <h2>Unos Mjera (Knjiga)</h2>
+            <p>Unos izmjerenih količina po pozicijama troškovnika.</p>
+          </div>
+        </header>
+
+        <div class="card">
+          <p style="color:var(--text-muted);text-align:center;padding:40px 0;">
+            📐 Unos mjerila dostupan nakon konfiguracije Firebase baze.<br>
+            <small>Pogledajte README.md za upute postavljanja.</small>
+          </p>
+        </div>
+
+      </section><!-- /#view-gk -->
+
+
+      <!-- ═══ VIEW: PREGLED GRAĐEVINSKE KNJIGE ════════════════ -->
+      <section id="view-gk-pregled" class="view">
+
+        <header class="view-header">
+          <div>
+            <h2>Pregled (Građ. Knjiga)</h2>
+            <p>Pregled svih unesenih mjerenja i zbirni prikaz.</p>
+          </div>
+        </header>
+
+        <div class="card">
+          <p style="color:var(--text-muted);text-align:center;padding:40px 0;">
+            📋 Pregled mjerila dostupan nakon konfiguracije Firebase baze.
+          </p>
+        </div>
+
+      </section><!-- /#view-gk-pregled -->
+
+
+      <!-- ═══ VIEW: TROŠKOVNIK SITUACIJE ══════════════════════ -->
+      <section id="view-situacija" class="view">
+
+        <header class="view-header">
+          <div>
+            <h2>Troškovnik Situacije</h2>
+            <p>Obračun privremenih i okončanih situacija.</p>
+          </div>
+        </header>
+
+        <div class="card">
+          <p style="color:var(--text-muted);text-align:center;padding:40px 0;">
+            📊 Situacije dostupne nakon unosa mjerila u Građevinsku Knjigu.
+          </p>
+        </div>
+
+      </section><!-- /#view-situacija -->
+
+
+      <!-- ═══ VIEW: PROJEKTI ═══════════════════════════════════ -->
+      <section id="view-projekti" class="view">
+
+        <header class="view-header">
+          <div>
+            <h2>Projekti</h2>
+            <p>Upravljanje projektima i njihovim troškovnicima.</p>
+          </div>
+          <div class="actions">
+            <button class="btn btn-primary" onclick="window.addNewProject()">
+              + Novi Projekt
+            </button>
+          </div>
+        </header>
+
+        <div class="projects-grid" id="projects-grid">
+          <!-- Filled by JS when this view is implemented -->
+          <div class="card" style="text-align:center;color:var(--text-muted);padding:30px;">
+            Koristite padajući izbornik u bočnoj traci za odabir projekta.
+          </div>
+        </div>
+
+      </section><!-- /#view-projekti -->
+
+
+      <!-- ═══ VIEW: POSTAVKE ═══════════════════════════════════ -->
+      <section id="view-postavke" class="view">
+
+        <header class="view-header">
+          <div>
+            <h2>Postavke</h2>
+            <p>Konfiguracija aplikacije i korisničkog računa.</p>
+          </div>
+        </header>
+
+        <div class="card">
+          <div class="settings-section">
+            <h3>Tema aplikacije</h3>
+            <div class="settings-row">
+              <span>Odaberite vizualni stil:</span>
+              <div style="display:flex;gap:8px;flex-wrap:wrap;">
+                <button class="btn btn-secondary" onclick="window.setAppTheme('dark')">Tamna</button>
+                <button class="btn btn-secondary" onclick="window.setAppTheme('light')">Svijetla</button>
+                <button class="btn btn-secondary" onclick="window.setAppTheme('premium')">Premium</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Firebase / Oblak</h3>
+            <div class="settings-row">
+              <span>Status Firebase veze:</span>
+              <span id="settings-firebase-status" style="color:var(--warning);">
+                Nije konfiguriran
+              </span>
+            </div>
+            <div class="settings-row">
+              <span>Postavljanje konfiguracije:</span>
+              <button class="btn btn-secondary" onclick="window.openCloudModal()">
+                ⚙️ Konfiguriraj
+              </button>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3>Korisnički račun</h3>
+            <div class="settings-row">
+              <span>Prijavljen kao:</span>
+              <span id="settings-user-email" style="color:var(--primary);">–</span>
+            </div>
+            <div class="settings-row">
+              <span>Odjava:</span>
+              <button class="btn btn-danger" onclick="window.doLogout()">
+                🚪 Odjavi se
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </section><!-- /#view-postavke -->
+
+    </main><!-- /.main-content -->
+
+  </div><!-- /.app-layout -->
+
+
+  <!-- App script -->
+  <script src="main.js"></script>
+
+</body>
+</html>
